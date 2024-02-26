@@ -131,10 +131,14 @@ to single-step.
 
 'initialization', {
     initialize: function(vm) {
+        if (vm.method.methodSignFlag()) {
+            console.warn("Sista bytecode set not (yet) supported by this JIT");
+            return {};
+        }
         this.vm = vm;
         this.comments = !!Squeak.Compiler.comments, // generate comments
         // for debug-printing only
-        this.specialSelectors = ['+', '-', '<', '>', '<=', '>=', '=', '~=', '*', '/', '\\', '@',
+        this.specialSelectors = ['+', '-', '<', '>', '<=', '>=', '=', '~=', '*', '/', '\\\\', '@',
             'bitShift:', '//', 'bitAnd:', 'bitOr:', 'at:', 'at:put:', 'size', 'next', 'nextPut:',
             'atEnd', '==', 'class', 'blockCopy:', 'value', 'value:', 'do:', 'new', 'new:', 'x', 'y'];
         this.doitCounter = 0;
