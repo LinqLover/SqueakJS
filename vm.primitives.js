@@ -264,7 +264,7 @@ Object.subclass('Squeak.Primitives',
             case 164: return this.popNandPushIfOK(argCount+1, this.vm.trueObj); // Fake primitiveSetImmutability
             case 165:
             case 166: return this.primitiveIntegerAtAndPut(argCount);
-            case 167: return false; // Processor.yield
+            case 167: return this.primitiveYield(argCount);
             case 168: return this.primitiveCopyObject(argCount);
             case 169: if (this.oldPrims) return this.primitiveDirectorySetMacTypeAndCreator(argCount);
                 else return this.popNandPushBoolIfOK(argCount+1, this.vm.stackValue(1) !== this.vm.stackValue(0)); //new: primitiveNotIdentical
@@ -1720,6 +1720,12 @@ Object.subclass('Squeak.Primitives',
     },
 },
 'scheduling', {
+    primitiveYield: function() {
+        var activeProc = this.activeProcess();
+        this.putToSleep(activeProc);
+        this.transferTo(this.wakeHighestPriority());
+        return true;
+    },
     primitiveResume: function() {
         this.resume(this.vm.top());
         return true;
