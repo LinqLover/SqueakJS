@@ -10916,7 +10916,8 @@
             if (obj.sqClass === this.vm.specialObjects[Squeak.splOb_ClassArray])
                 return this.js_fromStArray(obj.pointers || [], true);
             if (obj.sqClass === this.vm.specialObjects[Squeak.splOb_ClassBlockContext] ||
-                obj.sqClass === this.vm.specialObjects[Squeak.splOb_ClassBlockClosure])
+                obj.sqClass === this.vm.specialObjects[Squeak.splOb_ClassBlockClosure] ||
+                obj.sqClass === this.vm.specialObjects[Squeak.splOb_ClassFullBlockClosure])
                 return this.js_fromStBlock(obj);
             throw Error("asJSArgument needed for " + obj);  // image recognizes error string and will try again
         },
