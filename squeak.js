@@ -1020,14 +1020,30 @@ function createSqueakDisplay(canvas, options) {
     };
 
     var debounceTimeout;
+    function measureContainer() {
+        var parent = canvas.parentElement;
+        if (parent) {
+            if (parent.clientWidth && parent.clientHeight) {
+                return {width: parent.clientWidth, height: parent.clientHeight};
+            }
+            var rect = parent.getBoundingClientRect();
+            if (rect.width && rect.height) {
+                return {width: Math.round(rect.width), height: Math.round(rect.height)};
+            }
+            // parent may have zero height if the canvas is positioned out of flow
+        }
+        return {width: window.innerWidth, height: window.innerHeight};
+    }
     function onresize() {
         if (touch.orig) return; // manually resized
-        // call resizeDone only if window size didn't change for 300ms
-        var debounceWidth = window.innerWidth,
-            debounceHeight = window.innerHeight;
+        // call resizeDone only if size didn't change for 300ms
+        var size = measureContainer(),
+            debounceWidth = size.width,
+            debounceHeight = size.height;
         clearTimeout(debounceTimeout);
         debounceTimeout = setTimeout(function() {
-            if (debounceWidth == window.innerWidth && debounceHeight == window.innerHeight)
+            var now = measureContainer();
+            if (debounceWidth == now.width && debounceHeight == now.height)
                 display.resizeDone();
             else
                 onresize();
@@ -1035,8 +1051,8 @@ function createSqueakDisplay(canvas, options) {
         // CSS won't let us do what we want so we will layout the canvas ourselves.
         var x = 0,
             y = 0,
-            w = window.innerWidth,
-            h = window.innerHeight,
+            w = size.width,
+            h = size.height,
             paddingX = 0, // padding outside canvas
             paddingY = 0;
         // above are the default values for laying out the canvas
@@ -1081,7 +1097,12 @@ function createSqueakDisplay(canvas, options) {
 
     if (!options.embedded) {
         onresize();
-        window.onresize = onresize;
+        if (typeof ResizeObserver !== "undefined" && canvas.parentElement) {
+            // track container size changes without clobbering global handlers
+            new ResizeObserver(function() { onresize(); }).observe(canvas.parentElement);
+        } else {
+            window.addEventListener("resize", onresize);
+        }
     }
 
     return display;
