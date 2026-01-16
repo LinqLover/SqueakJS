@@ -1020,6 +1020,7 @@ function createSqueakDisplay(canvas, options) {
     };
 
     var debounceTimeout;
+    var lastMeasuredSize = null;
     function measureContainer() {
         var parent = canvas.parentElement;
         if (parent) {
@@ -1036,6 +1037,12 @@ function createSqueakDisplay(canvas, options) {
     }
     function onresize() {
         if (touch.orig) return; // manually resized
+        var size = measureContainer();
+        // ignore if size hasn't actually changed
+        if (lastMeasuredSize && lastMeasuredSize.width === size.width && lastMeasuredSize.height === size.height) {
+            return;
+        }
+        lastMeasuredSize = size;
         // call resizeDone only if size didn't change for 300ms
         var size = measureContainer(),
             debounceWidth = size.width,
@@ -1057,15 +1064,27 @@ function createSqueakDisplay(canvas, options) {
             paddingY = 0;
         // above are the default values for laying out the canvas
         if (!options.fixedWidth) { // set canvas resolution
-            if (!options.minWidth) options.minWidth = 700;
-            if (!options.minHeight) options.minHeight = 700;
-            var defaultScale = display.highdpi ? window.devicePixelRatio : 1,
-                scaleW = w < options.minWidth ? options.minWidth / w : defaultScale,
-                scaleH = h < options.minHeight ? options.minHeight / h : defaultScale,
-                scale = Math.max(scaleW, scaleH);
-            display.width = Math.floor(w * scale);
-            display.height = Math.floor(h * scale);
-            display.scale = w / display.width;
+            var defaultScale = display.highdpi ? window.devicePixelRatio : 1;
+            // For container-based sizing, don't enforce minimum size
+            var usingContainer = canvas.parentElement && 
+                (canvas.parentElement.clientWidth > 0 || canvas.parentElement.getBoundingClientRect().width > 0) &&
+                (size.width < window.innerWidth || size.height < window.innerHeight);
+            if (usingContainer) {
+                // Size canvas to match container exactly for sharp rendering
+                display.width = Math.floor(w * defaultScale);
+                display.height = Math.floor(h * defaultScale);
+                display.scale = w / display.width;
+            } else {
+                // Original fullscreen logic with minimum size
+                if (!options.minWidth) options.minWidth = 700;
+                if (!options.minHeight) options.minHeight = 700;
+                var scaleW = w < options.minWidth ? options.minWidth / w : defaultScale,
+                    scaleH = h < options.minHeight ? options.minHeight / h : defaultScale,
+                    scale = Math.max(scaleW, scaleH);
+                display.width = Math.floor(w * scale);
+                display.height = Math.floor(h * scale);
+                display.scale = w / display.width;
+            }
         } else { // fixed resolution and aspect ratio
             display.width = options.fixedWidth;
             display.height = options.fixedHeight;
