@@ -529,11 +529,12 @@ function createSqueakDisplay(canvas, options) {
                 touch.y = y / n;
             }
         }
+        var canvasRect = canvas.getBoundingClientRect();
         return {
             timeStamp: evt.timeStamp,
             button: touch.button,
-            offsetX: touch.x - canvas.offsetLeft,
-            offsetY: touch.y - canvas.offsetTop,
+            offsetX: touch.x - canvasRect.left,
+            offsetY: touch.y - canvasRect.top,
         };
     }
     function dd(ax, ay, bx, by) {var x = ax - bx, y = ay - by; return Math.sqrt(x*x + y*y);}
@@ -1038,6 +1039,7 @@ function createSqueakDisplay(canvas, options) {
     function onresize() {
         if (touch.orig) return; // manually resized
         var size = measureContainer();
+        // TODO: ignore if element is invisible?
         // ignore if size hasn't actually changed
         if (lastMeasuredSize && lastMeasuredSize.width === size.width && lastMeasuredSize.height === size.height) {
             return;
